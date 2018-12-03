@@ -1,0 +1,30 @@
+\documentclass{article}
+\usepackage[a4paper,margin=1in,landscape]{geometry}
+\usepackage{mathptmx}
+\usepackage[scaled=.90]{helvet}
+\usepackage{courier}
+\usepackage[T1]{fontenc}
+\usepackage{booktabs}
+\usepackage{dcolumn}
+
+\begin{document}
+
+\begin{table}[h!]
+  \centering
+  \caption{\Sexpr{stsName} (Abundance).}
+  \label{tab:tableAbundance}
+<<embedded-latex1, echo = FALSE, results='asis'>>=
+toLatex(outTable$Ab, digits=2)
+@
+\end{table}
+
+\begin{table}[h!]
+  \centering
+  \caption{\Sexpr{stsName} (Weight).}
+  \label{tab:tableWeight}
+<<embedded-latex2, echo = FALSE, results='asis'>>=
+toLatex(outTable$Wt, digits=2)
+@
+\end{table}
+
+\end{document}

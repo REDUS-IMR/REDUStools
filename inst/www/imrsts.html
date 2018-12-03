@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<title>IMR STS</title>
+
+<link type="text/css" rel="stylesheet" href="css/imrsts.min.css"/>
+
+<style type="text/css" media="screen">
+body{
+  margin-left: 10px;
+}
+iframe {
+  position: absolute;
+  top: 0px;
+  right: 0px;
+  width: 50%;
+  height: 100%;
+  border: 0;
+  margin: 0;
+  z-index: 999999;
+}
+</style>
+
+</head>
+<body>
+
+<h1>IMR Survey Time Series Explorer</h1>
+
+<div>
+<p class="lead">Please select a survey series:</p>
+<select class="btn btn-default" id="dropDownList" disabled>
+  <option></option>
+</select>
+</div>
+<br />
+<div id="meta">
+</div>
+
+<iframe src="about:blank"></iframe>
+
+<div class="navbar-fixed-bottom">
+<div>Copyright &copy; The Institute of Marine Research, Norway 2017</div>
+<div>Contact: Ibrahim Umar (ibrahim.umar (at) imr.no)</div>
+</div>
+
+<!-- OpenCPU client library -->
+<script src="http://code.jquery.com/jquery-1.11.1.min.js"></script>
+<script src="http://cdn.opencpu.org/opencpu-0.4.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/gasparesganga-jquery-loading-overlay@1.5.3/src/loadingoverlay.min.js""></script>
+<script>
+(function($) {
+
+// Generate new page containing plotss and tables
+function doGenerate(e){
+    // Generate chart for STS
+    var req = ocpu.call("doGenerate", {
+      // Submit content of the dropdown select
+      mySTS : $("#dropDownList").val()
+    }, function(session){
+      session.getObject(function(data){
+	// Generate metadata stats from JSON output
+	var html = '<table border="0">';
+        $.each(data, function(key, value){
+            html += '<tr>';
+            html += '<td>' + key + '</td>';
+            html += '<td>: ' + value + '</td>';
+            html += '</tr>';
+        });
+        html += '</table>';
+	// Put it in meta div
+        $('#meta').html(html);
+      });
+      // Change the iframe with the newly generated page
+      $("iframe").attr('src', session.getFileURL("output.html"));
+      // Hide overlay on select after iframe is loaded 
+      $("iframe").load(function() {
+	$("#dropDownList").LoadingOverlay("hide");
+      });
+    }).fail(function(text){
+      alert("Error: " + req.responseText);
+    });
+  }
+
+
+// Load list of STS and populate dropDownList
+function loadSTSList(){
+    // Call R function to generate STS list in JSON
+    var req = ocpu.rpc("getSTSList", {}, 
+    function(output){
+	// Populate dropDownList
+        $.each(output, function (index, item) {
+         $('#dropDownList').append(
+              $('<option></option>').val(item).html(item)
+          );
+        });
+	// Hide the full page overlay when finished
+	$.LoadingOverlay("hide");
+    });
+    req.always(function(){
+	// After call to STS returned, enable select and apply onChange event
+        $("#dropDownList").removeAttr("disabled").on('change', function() {
+		// Dont do anything if nothing is selected
+		if($("#dropDownList").val() == "")
+        	   return 0;
+		// Else show overlay and call doGenerate
+		$("#dropDownList").LoadingOverlay("show");
+                doGenerate();
+        });
+    }).fail(function(text){
+        alert("Error: " + req.responseText);
+    });
+  }
+  // On startup show full-page overlay and populate the select button
+  $.LoadingOverlay("show");
+  loadSTSList();
+}(jQuery));
+</script>
+
+
+</body>
+</html>

@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html>
+  <head>
+  <title>REDUS Time Series Status (alpha)</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width">
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">  
+<link href="//maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet">
+  <script src="//code.jquery.com/jquery-3.2.1.min.js" integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4=" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
+  <script src="//cdn.jsdelivr.net/npm/opencpu-browser@0.5.0-alpha/opencpu.min.js"></script>
+
+<style>
+.hiddenRow {
+    padding: 0 !important;
+}
+
+tr.lvl1 > td:first-child {
+    padding-left: 50px !important;
+}
+
+tr.lvl2 > td:first-child {
+    padding-left: 100px !important;
+}
+
+tr.loading-row > td{
+    background-color: lightyellow;
+}
+
+</style>
+
+  <script type="text/javascript">
+
+	var sessionData;
+
+	function LoadLV3(series, subSeries, subSubID) {
+		var req4 = ocpu.call("genStatusHTML", {timeSeriesStatus : sessionData, series:series, year:subSeries}, function(session4){
+			session4.getObject(function(data){
+				var subTbl = $($.parseHTML(data[0])).filter("table")
+				var rowsLv2 = $("tbody", subTbl)
+				rowsLv2.children().addClass("accordion-body collapse lvl2 " + subSubID)
+				var resLv2 = rowsLv2.html();
+
+				var dataPath = series+"$"+subSeries;
+
+				// loading info
+				var loadElement = $("#" + subSubID + "-loader")
+
+				resLv2 = resLv2.replace(/TRUE/g, "<i class=\"fa fa-check-circle-o fa-2x\" style=\"color:green\"></i>");
+				resLv2 = resLv2.replace(/FALSE/g, "<i class=\"fa fa-times-circle-o fa-2x showMsg\" data-path=\""+dataPath+"\" style=\"color:red\"></i>");
+				resLv2 = resLv2.replace(/NA/g, "<i class=\"fa fa-ban fa-2x\" style=\"color:orange\"></i>");
+
+				loadElement.after(resLv2);
+
+				// Show the data and remove the loader
+				loadElement.remove();
+				$("tr." + subSubID).collapse('show');
+
+			});
+		});
+	}
+
+	function LoadLV2(series, subID) {
+		var req3 = ocpu.call("genStatusHTML", {timeSeriesStatus : sessionData, series:series}, function(session3){
+			session3.getObject(function(data){
+				var tbl = $($.parseHTML(data[0])).filter("table")
+				var rowsLv1 = $("tbody", tbl)
+				rowsLv1.children().addClass("accordion-body table-info collapse lvl1 "+ subID)
+				var resLv1 = rowsLv1.html();
+				resLv1 = resLv1.replace(/TRUE/g, "<i class=\"fa fa-check-circle-o fa-2x\" style=\"color:green\"></i>");
+				resLv1 = resLv1.replace(/FALSE/g, "<i class=\"fa fa-times-circle-o fa-2x\" style=\"color:red\"></i>");
+				resLv1 = resLv1.replace(/NA/g, "<i class=\"fa fa-ban fa-2x\" style=\"color:orange\"></i>");
+
+				// Find number or columns
+				var rows = $('tr', tbl);
+
+				// remove the first row
+				rows = rows.slice(1);
+
+				var ncol = $("td", rows.first()).length;
+					
+				// loading info
+				var loadElement = $("#" + subID + "-loader")
+
+				// Append new data
+				loadElement.after(resLv1);
+
+				rowsLv1 = $("tr." + subID)
+				rowsLv1.each(function( idxLv1, elLv1 ) {
+					var subSubID = subID + "-" + idxLv1;
+				
+					// Disable global details (TODO: enable later)
+					var subSeries = $("td:first", elLv1).text().trim();
+					if(subSeries=="global") return true;
+
+					var newrow = "<tr id=\"" + subSubID + "-loader\" class=\"loading-row accordion-body table-info collapse lvl1 " + subSubID + "\"><td colspan=\""+ncol+"\">LOADING....  <i class=\"fa fa-circle-o-notch fa-spin\" style=\"font-size:18px\"></i></td></tr>";
+					var elx = $(elLv1)
+					elx.after(newrow)
+					elx.attr("data-toggle","collapse").attr("data-target", "." + subSubID).addClass("accordion-toggle");
+
+					// Ensure to close children when own row is closed
+					elx.on('hide.bs.collapse', function () {
+						$("tr." + subSubID).collapse('hide');
+					})
+
+					// Trigger next level if loading is shown
+					elx.next().on('shown.bs.collapse', function () {
+						if($(this).is(":visible")) {
+							LoadLV3(series, subSeries, subSubID);
+						}
+					})
+				});
+
+				// Show the data and remove the loader
+				loadElement.remove();
+				rowsLv1.collapse('show');
+			});
+		});
+	}
+
+
+        $(function(){
+		$('#statusTable').on("click", ".showMsg", function() {
+			var el = $(this);
+
+			// Get the item name
+			var tr = $(el).closest("tr");
+			var item = tr.find('td:first').text().trim();
+
+			var path = el.data("path")+"$"+item;
+			
+			// Get date
+			var index = el.closest('td').index();
+    			var table = el.closest('table');
+    			var timestamp = table.find('th').eq(index).text().trim();
+
+			var req = ocpu.rpc("getErrorInfo",{
+				path : path,
+				timestamp : timestamp
+			}, function(output){
+				alert("Reason: " + output);
+			});
+
+			//optional
+			req.fail(function(){
+    				alert("R returned an error: " + req.responseText);
+			});
+
+		});
+
+                var req1 = ocpu.call("loadTimeSeriesStatus", {}, function(session1){
+			sessionData = session1;
+                        var req2 = ocpu.call("genStatusHTML", {timeSeriesStatus : sessionData}, function(session2){
+				session2.getObject(function(data){
+					var res = data[0]
+					res = res.replace(/TRUE/g, "<i class=\"fa fa-check-circle-o fa-2x\" style=\"color:green\"></i>");
+					res = res.replace(/FALSE/g, "<i class=\"fa fa-times-circle-o fa-2x\" style=\"color:red\"></i>");
+					res = res.replace(/NA/g, "<i class=\"fa fa-ban fa-2x\" style=\"color:orange\"></i>");
+
+					// Populate HTML
+					var table = $("#statusTable");
+					table.html(res);
+
+					// Get rows
+					var rows = $('tr', table);
+
+					// remove the first row
+					rows = rows.slice(1);
+
+					// Find number or columns
+					var ncol = $('td', rows.first()).length;
+
+					rows.addClass("table-primary");
+					rows.each(function( idx, el ) {
+
+						var subID = "series-" + idx;
+						var series = $("td:first", el).text().trim();
+
+						var newrow = "<tr id=\"" + subID + "-loader\" class=\"loading-row accordion-body table-info collapse lvl1 " + subID + "\"><td colspan=\""+ncol+"\">LOADING....  <i class=\"fa fa-circle-o-notch fa-spin\" style=\"font-size:18px\"></i></td></tr>";
+						var elx = $(el);
+						elx.after(newrow);
+						elx.attr("data-toggle","collapse").attr("data-target", "." + subID).addClass("accordion-toggle");
+
+						// Trigger next level if loading is shown
+						elx.next().on('shown.bs.collapse', function () {
+							if($(this).is(":visible")) {
+								LoadLV2(series, subID);
+							}
+						})
+
+					});		
+                                });
+                        });
+                });
+        });
+  </script>
+
+
+  </head>
+  <body>
+  <h1>REDUS Time Series Evaluator</h1>
+  <div id="statusTable">&nbsp;</div>
+  </body>
+</html>
+

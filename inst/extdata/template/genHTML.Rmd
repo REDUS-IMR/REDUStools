@@ -1,0 +1,30 @@
+# `r stsName`
+
+[Download PDF](./`r stsName`.result.pdf)  [Download LaTeX](./`r stsName`.result.tex)
+
+## Abundance
+![](`r stsName`.Abundance.png)
+
+[Download Image](./`r stsName`.Abundance.png)
+
+```{r table-abundance, results='asis', warning=FALSE, echo=FALSE}
+show_html(outTable$Ab, digits=2, output="stdout")
+```
+
+[Download CSV](./`r stsName`.Abundance.csv)
+
+## Weight
+![](`r stsName`.Weight.png)
+
+[Download Image](./`r stsName`.Weight.png)
+
+```{r table-weight, results='asis', warning=FALSE, echo=FALSE}
+show_html(outTable$Wt, digits=2, output="stdout")
+```
+
+[Download CSV](./`r stsName`.Weight.csv)
+
+### Metadata
+```{r table-fp, results='asis', warning=FALSE, echo=FALSE}
+show_html(stsFP, digits=2, output="stdout")
+```
