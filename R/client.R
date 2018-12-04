@@ -147,7 +147,7 @@ preprocess <- function(configFile) {
 			# No more configs for this type, break
 			if(length(singleConf) == 0) break
 
-			do.fun <- match.fun(paste0("preprocess.", type))
+			do.fun <- eval(parse(text=paste0("preprocess.", type)))
 
 			result <- do.fun(query, target, updateFileName, singleConf)
 
