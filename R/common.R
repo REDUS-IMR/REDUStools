@@ -8,7 +8,18 @@ getConfig <- function() {
    return(config)
 }
 
-# Get Time series directory
+#' Get the time series directory path
+#'
+#' \code{getTimeSeriesDir} returns the path of the time series working directory,
+#' which the type can be "survey" or "catch".
+#'
+#' @param type The requested type of survey time series.
+#' @return The absolute path to the survey time type series requested.
+#'
+#' @examples
+#' getTimeSeriesDir("survey")
+#'
+#' @export
 getTimeSeriesDir <- function(type) {
 	config <- getConfig()
 	return(paste0(config[["root.dir"]], "/", config[[paste0(type, ".dir")]], "/timeseries/"))
