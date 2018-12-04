@@ -90,5 +90,80 @@ updateICESSurveyFile <- function(surveyFile, srcHead, stsName, stsDate = NULL, u
 	return(TRUE)
 }
 
+# Do pre-process on survey data
+preprocess.survey <- function(query, target, file, config) {
 
+	mode <- config[[paste0(query, ".mode")]]
+	header <- config[[paste0(query, ".header")]]
+	sts <- config[[paste0(query, ".stssource")]]
+	stsDate <- config[[paste0(query, ".stsdata")]]
+	sourceAge <- config[[paste0(query, ".useSourceAge")]]
+	sourceYear <- config[[paste0(query, ".useSourceYear")]]
+
+	# Set target (remote or local)
+	target[["mode"]] <- mode
+
+	# Do process
+	ret <- updateICESSurveyFile(file, header, sts, stsDate, useSourceAge = sourceAge, useSourceYear = sourceYear, target)
+
+	return(ret)
+}
+
+#' Start the pre-processing based on the given configuration file.
+#'
+#' \code{preprocess} returns TRUE if succeeded or FALSE if failed.
+#' @param configFile The path to the configuration file.
+#'
+#' @importFrom config get
+#' @export
+preprocess <- function(configFile) {
+
+	# Get config
+	if(!file.exists(configFile))
+		return(FALSE)
+
+        configs <- config::get(file = configFile, use_parent = FALSE)
+
+	# Right now, only process survey update:
+	types <- list("survey")
+
+	# Composing target location
+	target <- list(url=configs[["redustools.remote"]])
+
+	for(i in 1:length(types)) {
+
+		type <- types[[i]]
+
+		print(paste("Processing", type, "updates..."))
+
+		updateFileName <- configs[[types[[i]]]]
+
+		# Set iterations for multiple update requests
+		iter <- 1
+		while(1) {
+			query <- paste0(type, ".update.", iter)
+			singleConf <- configs[grepl(query, names(configs))]
+
+			# No more configs for this type, break
+			if(length(singleConf) == 0) break
+
+			do.fun <- match.fun(paste0("preprocess.", type))
+
+			result <- do.fun(query, target, updateFileName, singleConf)
+
+			if(result)
+				print(paste("SUCCESS! #", query))
+			else
+				print(paste("ERROR! #", query))
+
+			# Or just increment the iter
+			iter <- iter + 1
+		}
+	}
+	return(TRUE)
+}
+
+#redusConfigs <- config::get(file = "redus/redus.yaml", use_parent = FALSE)
+
+#preprocess(redusConfigs)
 
