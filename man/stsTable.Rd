@@ -17,6 +17,8 @@ stsTable(stsData, type = "Abundance", raw = FALSE)
 \code{stsTable} prints out a HTML table based on its parameters.
 }
 \examples{
+\dontrun{
 stsTable(loadSTS("Barents Sea Northeast Arctic cod bottom trawl index in winter"), "Abundance")
+}
 
 }

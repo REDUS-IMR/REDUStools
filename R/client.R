@@ -100,6 +100,13 @@ preprocess.survey <- function(query, target, file, config) {
 	sourceAge <- config[[paste0(query, ".useSourceAge")]]
 	sourceYear <- config[[paste0(query, ".useSourceYear")]]
 
+	# Check if we want to rebuid time series using stox
+	if(mode == "build") {
+		processRstoxSTS(config[[paste0(query, ".surveyBuildConf")]])
+		# Set mode to local
+		mode <- "local"
+	}
+
 	# Set target (remote or local)
 	target[["mode"]] <- mode
 

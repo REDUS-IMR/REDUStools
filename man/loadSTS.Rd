@@ -18,6 +18,8 @@ On a valid input a REDUS database object will be returned or NULL otherwise.
 \code{loadSTS} returns an Rstox processed REDUS time series database.
 }
 \examples{
+\dontrun{
 loadSTS("Barents Sea Northeast Arctic cod bottom trawl index in winter", "20181215")
+}
 
 }

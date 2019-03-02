@@ -19,7 +19,9 @@ getSTSList <- function(){
 #' @param ts timestamp. Must be in "YYMMDD.HHMMSS" or "YYMMDD" character format. Default is NULL.
 #' @return On a valid input a REDUS database object will be returned or NULL otherwise.
 #' @examples
+#' \dontrun{
 #' loadSTS("Barents Sea Northeast Arctic cod bottom trawl index in winter", "20181215")
+#' }
 #'
 #' @export
 loadSTS <-function(mySTS, ts = NULL){
@@ -59,8 +61,10 @@ loadSTS <-function(mySTS, ts = NULL){
 #' @param sep Separator character.
 #' @return On a valid input a character object (list) will  be returned.
 #' @examples
+#' \dontrun{
 #' stsData <- loadSTS("Barents Sea Northeast Arctic cod bottom trawl index in winter")
 #' headerTranslation <- processLenGrpHeader(stsData$data2)
+#' }
 #'
 #' @export
 processLenGrpHeader <- function(tblResult, target="LenGrp", prefix="", rangeSeparator="-", plusAgeChar="+", sep=" "){
@@ -92,7 +96,9 @@ processLenGrpHeader <- function(tblResult, target="LenGrp", prefix="", rangeSepa
 #' @param type text, valid values are \code{"Abundance"} and \code{"Weight"}.
 #' @return On a valid input a ggplot2 object will be returned.
 #' @examples
+#' \dontrun{
 #' stsPlot(loadSTS("Barents Sea Northeast Arctic cod bottom trawl index in winter"), "Abundance")
+#' }
 #'
 #' @importFrom ggplot2 ggplot stat_summary_bin scale_color_hue mean_cl_boot ggtitle aes_string ylab xlab guide_legend guides scale_y_continuous
 #' @importFrom scales log2_trans trans_breaks trans_format math_format
@@ -160,7 +166,9 @@ stsPlot <- function(stsData, type="Abundance"){
 #' @param type text, valid values are \code{"Abundance"} and \code{"Weight"}.
 #' @param raw boolean
 #' @examples
+#' \dontrun{
 #' stsTable(loadSTS("Barents Sea Northeast Arctic cod bottom trawl index in winter"), "Abundance")
+#' }
 #'
 #' @importFrom stats ftable xtabs
 #' @importFrom memisc show_html
@@ -241,7 +249,9 @@ stsTable <- function(stsData, type="Abundance", raw=FALSE){
 #' @return If the input valid and the time series contains a build fingerprint, a 
 #'   list will be returned. Otherwise it's NULL.
 #' @examples
+#' \dontrun{
 #' doGenerate("Barents Sea Northeast Arctic cod bottom trawl index in winter")
+#' }
 #'
 #' @importFrom utils download.file
 #' @importFrom knitr knit2html

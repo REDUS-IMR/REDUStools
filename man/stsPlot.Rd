@@ -18,6 +18,8 @@ On a valid input a ggplot2 object will be returned.
 \code{stsPlot} returns an STS plot based on its parameters.
 }
 \examples{
+\dontrun{
 stsPlot(loadSTS("Barents Sea Northeast Arctic cod bottom trawl index in winter"), "Abundance")
+}
 
 }

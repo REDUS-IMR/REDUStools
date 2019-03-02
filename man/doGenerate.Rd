@@ -20,6 +20,8 @@ If the input valid and the time series contains a build fingerprint, a
 and tables and also returns the metadata an survey time series specified in its argument.
 }
 \examples{
+\dontrun{
 doGenerate("Barents Sea Northeast Arctic cod bottom trawl index in winter")
+}
 
 }

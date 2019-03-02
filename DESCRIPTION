@@ -1,12 +1,12 @@
 Package: REDUStools
 Type: Package
 Title: IMR Survey Time Series (STS) Explorer Application for OpenCPU
-Version: 0.2
-Date: 2018-12-03
+Version: 0.3
+Date: 2019-03-02
 Author: Ibrahim Umar
 Maintainer: Ibrahim Umar <ibrahim.umar@hi.no>
 Description: Various REDUS related tools. 1) IMR Survey Time Series (STS) Explorer Application for OpenCPU. Provides visualization and data exports.
 License: LGPL-3 + file LICENSE
 Imports:
-    Rstox, config, memisc, ggplot2, scales, data.table, knitr, httr
+    Rstox, config, memisc, ggplot2, scales, data.table, knitr, httr, desc, XML, rJava, filelock
 RoxygenNote: 6.1.1
