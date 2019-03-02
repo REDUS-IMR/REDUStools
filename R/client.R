@@ -96,7 +96,7 @@ preprocess.survey <- function(query, target, file, config) {
 	mode <- config[[paste0(query, ".mode")]]
 	header <- config[[paste0(query, ".header")]]
 	sts <- config[[paste0(query, ".stssource")]]
-	stsDate <- config[[paste0(query, ".stsdata")]]
+	stsDate <- config[[paste0(query, ".stsdate")]]
 	sourceAge <- config[[paste0(query, ".useSourceAge")]]
 	sourceYear <- config[[paste0(query, ".useSourceYear")]]
 
