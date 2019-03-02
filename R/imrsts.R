@@ -16,16 +16,26 @@ getSTSList <- function(){
 #' \code{loadSTS} returns an Rstox processed REDUS time series database.
 #'
 #' @param mySTS STS name.
-#' @param ts timestamp.
+#' @param ts timestamp. Must be in "YYMMDD.HHMMSS" or "YYMMDD" character format. Default is NULL.
 #' @return On a valid input a REDUS database object will be returned or NULL otherwise.
 #' @examples
-#' \donttest{
-#' loadSTS("Barents Sea Northeast Arctic cod bottom trawl index in winter")
-#' }
+#' loadSTS("Barents Sea Northeast Arctic cod bottom trawl index in winter", "20181215")
 #'
 #' @export
-loadSTS <-function(mySTS, ts){
-	dataFile <- paste0(getTimeSeriesDir("survey"), mySTS, "/output.rds")
+loadSTS <-function(mySTS, ts = NULL){
+
+	stsDir <- paste0(getTimeSeriesDir("survey"), mySTS)
+
+	if(!is.null(ts)) {
+		stsFile <- list.files(stsDir, pattern = paste0("output.rds.", ts, "+"))[1]
+		if(is.na(stsFile)) {
+			stsFile <- "output.rds"
+		}
+	} else {
+		stsFile <- "output.rds"
+	}
+
+	dataFile <- paste0(stsDir, "/", stsFile)
 	if(file.exists(dataFile)){
 		stsData <- readRDS(dataFile)
 		return(stsData)
@@ -49,10 +59,8 @@ loadSTS <-function(mySTS, ts){
 #' @param sep Separator character.
 #' @return On a valid input a character object (list) will  be returned.
 #' @examples
-#' \donttest{
 #' stsData <- loadSTS("Barents Sea Northeast Arctic cod bottom trawl index in winter")
-#' headerTranslation <- processLenGrpHeader(stsData$data) 
-#' }
+#' headerTranslation <- processLenGrpHeader(stsData$data2)
 #'
 #' @export
 processLenGrpHeader <- function(tblResult, target="LenGrp", prefix="", rangeSeparator="-", plusAgeChar="+", sep=" "){
@@ -229,6 +237,7 @@ stsTable <- function(stsData, type="Abundance", raw=FALSE){
 #' and tables and also returns the metadata an survey time series specified in its argument.
 #'
 #' @param mySTS text.
+#' @param ts timestamp. Must be in "YYMMDD.HHMMSS" or "YYMMDD" character format. Default is NULL.
 #' @return If the input valid and the time series contains a build fingerprint, a 
 #'   list will be returned. Otherwise it's NULL.
 #' @examples
@@ -237,9 +246,9 @@ stsTable <- function(stsData, type="Abundance", raw=FALSE){
 #' @importFrom utils download.file
 #' @importFrom knitr knit2html
 #' @export
-doGenerate <- function(mySTS){
+doGenerate <- function(mySTS, ts = NULL){
   # Fetch STS data
-  stsData <- loadSTS(mySTS)
+  stsData <- loadSTS(mySTS, ts)
 
   # Template text for knitr	
   rawText<-c(

@@ -3,6 +3,7 @@
 export(doGenerate)
 export(genStatusHTML)
 export(getErrorInfo)
+export(getREDUSRootDir)
 export(getSTSList)
 export(getTimeSeriesDir)
 export(loadSTS)

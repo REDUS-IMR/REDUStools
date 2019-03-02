@@ -83,7 +83,7 @@ loadTimeSeriesStatus <- function(type="REDUS"){
 	if(type=="REDUS")
 		timeseriesDir <- getTimeSeriesDir("survey")
 	else
-		timeseriesDir <- "/home/a5414/STOX2SAM-stockversion/data"
+		timeseriesDir <- type
 
 	timeSeriesStatusFile <- file.path(timeseriesDir, "status.rds")
 

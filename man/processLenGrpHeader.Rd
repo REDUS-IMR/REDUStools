@@ -31,9 +31,7 @@ For example an original length group header of \code{c('5', '10', '15')} is tran
 into \code{c('5'='5-9', '10'='10-15', '15'='15+')}.
 }
 \examples{
-\donttest{
 stsData <- loadSTS("Barents Sea Northeast Arctic cod bottom trawl index in winter")
-headerTranslation <- processLenGrpHeader(stsData$data) 
-}
+headerTranslation <- processLenGrpHeader(stsData$data2)
 
 }

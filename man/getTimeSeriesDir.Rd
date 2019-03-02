@@ -10,7 +10,7 @@ getTimeSeriesDir(type)
 \item{type}{The requested type of survey time series.}
 }
 \value{
-If the input valid the absolute path to the survey time series requested.
+The absolute path to the survey time type series requested.
 }
 \description{
 \code{getTimeSeriesDir} returns the path of the time series working directory,

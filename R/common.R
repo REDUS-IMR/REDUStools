@@ -25,7 +25,9 @@ getTimeSeriesDir <- function(type) {
 	return(paste0(config[["root.dir"]], "/", config[[paste0(type, ".dir")]], "/timeseries/"))
 }
 
-# Get REDUS work directory
+#' Get REDUS work directory (as defined in the option file)
+#'
+#' @export
 getREDUSRootDir <- function() {
    config <- getConfig()
    return(paste0(config[["root.dir"]], "/"))

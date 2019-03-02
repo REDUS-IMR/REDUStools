@@ -1,5 +1,8 @@
 getAssessmentData.core <- function(src, date, ageVec, yearVec, type, format, useHeader)
 {
+
+	print("Generating assessment data")
+
 	if(type == "STS") {
 		srcData <- loadSTS(src, date)
 	} else {

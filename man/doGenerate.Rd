@@ -4,10 +4,12 @@
 \alias{doGenerate}
 \title{Generate an html output consists of plots and table.}
 \usage{
-doGenerate(mySTS)
+doGenerate(mySTS, ts = NULL)
 }
 \arguments{
 \item{mySTS}{text.}
+
+\item{ts}{timestamp. Must be in "YYMMDD.HHMMSS" or "YYMMDD" character format. Default is NULL.}
 }
 \value{
 If the input valid and the time series contains a build fingerprint, a 
