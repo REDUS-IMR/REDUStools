@@ -2,3 +2,5 @@ default:
   root.dir: "/data/REDUS"
   survey.dir: "survey"
   catch.dir: "catch"
+docker:
+  root.dir: "."
