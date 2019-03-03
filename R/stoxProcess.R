@@ -12,6 +12,7 @@
 #' @importFrom data.table data.table rbindlist tstrsplit CJ is.data.table
 #' @importFrom filelock lock unlock
 #' @importFrom utils packageVersion
+#' @importFrom parallel detectCores
 processRstoxSTS <- function(masterScript) {
 
   # Apply overrides to xml nodes
@@ -334,7 +335,8 @@ processRstoxSTS <- function(masterScript) {
     ## how many bootstrap iterations
     bootstrapIter <- as.numeric(configSTS$bootstrapIter)
     ## how many cores use
-    coresUse <- 4 ##as.numeric(configSTS$coresUse)
+    coresUse <- as.numeric(configSTS$coresUse)
+    if(is.null(coresUse)) coresUse <- detectCores()
 
     # Plus age parameter
     plusAge <- as.numeric(configSTS$plusAge)
