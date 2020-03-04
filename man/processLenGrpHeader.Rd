@@ -4,8 +4,14 @@
 \alias{processLenGrpHeader}
 \title{Process a length grup header.}
 \usage{
-processLenGrpHeader(tblResult, target = "LenGrp", prefix = "",
-  rangeSeparator = "-", plusAgeChar = "+", sep = " ")
+processLenGrpHeader(
+  tblResult,
+  target = "LenGrp",
+  prefix = "",
+  rangeSeparator = "-",
+  plusAgeChar = "+",
+  sep = " "
+)
 }
 \arguments{
 \item{tblResult}{REDUS STS data table.}

@@ -4,8 +4,15 @@
 \alias{updateICESSurveyFile}
 \title{Update or add a survey index abundance in an ICES format file.}
 \usage{
-updateICESSurveyFile(surveyFile, srcHead, stsName, stsDate = NULL,
-  useSourceAge = FALSE, useSourceYear = FALSE, target)
+updateICESSurveyFile(
+  surveyFile,
+  srcHead,
+  stsName,
+  stsDate = NULL,
+  useSourceAge = FALSE,
+  useSourceYear = FALSE,
+  target
+)
 }
 \arguments{
 \item{surveyFile}{The path to the survey file.}
