@@ -15,7 +15,7 @@ getAssessmentData.core <- function(src, date, ageVec, yearVec, type, format, use
 		stop("Not implemented!")
 	}
 
-	return(result)
+	return(list(data=result[[1]], data_var=result[[2]]))
 }
 
 formatSAM <- function(data, ageVec, yearVec, useHeader = TRUE){
@@ -35,8 +35,8 @@ formatSAM <- function(data, ageVec, yearVec, useHeader = TRUE){
 	maxAge <- max(data$data$age, na.rm=T)
 
 	if(!is.null(yearVec) && length(yearVec) == 2 &&
-			yearVec[2] <= max(data$data$year)&&
-			yearVec[1] >= min(data$data$year)) {
+		yearVec[2] <= max(data$data$year)&&
+		yearVec[1] >= min(data$data$year)) {
                 endYear <- yearVec[2]
                 startYear <- yearVec[1]
 	} else {
@@ -52,16 +52,20 @@ formatSAM <- function(data, ageVec, yearVec, useHeader = TRUE){
 	colnames(tempTBL) <- attr(tempfTBL, "col.vars")[[1]]
 	tempTBL[, year:=(attr(tempfTBL, "row.vars")[[1]])]
 
-	# Parse config
-	FileOutputName <- paste(mySTS, type,"SAM.dat", sep=".")
+	# and variance
+	tempTBLVAR <- data.table(attr(tempfTBL, "variance"))
+	colnames(tempTBLVAR) <- attr(tempfTBL, "col.vars")[[1]]
+	tempTBLVAR[, year:=(attr(tempfTBL, "row.vars")[[1]])]
 
-	# Placeholder
-	FileOutput <- tempfile()
+	# Parse config
+	#FileOutputName <- paste(mySTS, type,"SAM.dat", sep=".")
 
 	# Filter out table
 	rowUnset <- setdiff(tempTBL$year, as.character(c(startYear:endYear)))
-	if(length(rowUnset) > 0 )
+	if(length(rowUnset) > 0 ) {
 		tempTBL <- tempTBL[year != rowUnset]
+		tempTBLVAR <- tempTBLVAR[year != rowUnset]
+	}
 	tempTBL[, setdiff(colnames(tempTBL), as.character(c(minAge:maxAge))) := NULL]
 
 	# Getting the plus age columns (7+ or else)
@@ -76,13 +80,16 @@ formatSAM <- function(data, ageVec, yearVec, useHeader = TRUE){
 
 	# ..and filter out unwanted age columns using keep
 	tempTBL <- tempTBL[, ..keep]
+	tempTBLVAR <- tempTBLVAR[, ..keep]
 
 	# Round the abundance-per-year values to 3 decimal places
 	tempTBL <- tempTBL[, round(.SD, digits = 3)]
+	tempTBLVAR <- tempTBLVAR[, round(.SD, digits = 3)]
 
 	# Add effort value in the first column
 	effortNumber <- 1
 	tempTBL <- cbind(a = effortNumber, tempTBL)
+	tempTBLVAR <- cbind(a = effortNumber, tempTBLVAR)
 	
 	### Prepare header
 
@@ -107,27 +114,35 @@ formatSAM <- function(data, ageVec, yearVec, useHeader = TRUE){
 
 	### Write everything
 
+	# Placeholder
+        FileOutput <- tempfile()
+	FileOutputVar <- tempfile()
+
 	if(useHeader) {
 		# Add title
 		textHead <- paste(FleetName, textHead, sep = "\n")
 
 		# Write title
 		suppressWarnings(write(strtrim(mySTS, 80), file= FileOutput, append=FALSE))
+		suppressWarnings(write(strtrim(mySTS, 80), file= FileOutputVar, append=FALSE))
 
 		# Write number of fleet (Now we only have one fleet)
 		NoFleet <- 100 + 1
 		suppressWarnings(write(NoFleet, file= FileOutput, append=TRUE))
+		suppressWarnings(write(NoFleet, file= FileOutputVar, append=TRUE))
 	}
 
 	# Write header per fleet
 	suppressWarnings(write(textHead, file= FileOutput, append=TRUE))
+	suppressWarnings(write(textHead, file= FileOutputVar, append=TRUE))
 
 	# Table per-fleet
 	suppressWarnings(write.table(tempTBL, file=FileOutput, append=TRUE, sep="\t", dec=".", col.names = FALSE, row.names=FALSE))
+	suppressWarnings(write.table(tempTBLVAR, file=FileOutputVar, append=TRUE, sep="\t", dec=".", col.names = FALSE, row.names=FALSE))
 
-	ret <- readLines(FileOutput)
-
-	unlink(ret)
+	ret <- list()
+	ret[["data"]] <- readLines(FileOutput)
+	ret[["data_var"]] <- readLines(FileOutputVar)
 
 	return(ret)
 }

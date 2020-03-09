@@ -8,5 +8,5 @@ Maintainer: Ibrahim Umar <ibrahim.umar@hi.no>
 Description: Various REDUS related tools. 1) IMR Survey Time Series (STS) Explorer Application for OpenCPU. Provides visualization and data exports.
 License: LGPL-3 + file LICENSE
 Imports:
-    Rstox, config, memisc, ggplot2, scales, data.table, markdown, knitr, httr, desc, XML, rJava, filelock
+    Rstox, jsonlite, config, memisc, ggplot2, scales, data.table, markdown, knitr, httr, desc, XML, rJava, filelock
 RoxygenNote: 7.0.2

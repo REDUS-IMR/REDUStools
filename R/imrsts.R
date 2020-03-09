@@ -173,6 +173,7 @@ stsPlot <- function(stsData, type="Abundance"){
 #' @importFrom stats ftable xtabs
 #' @importFrom memisc show_html
 #' @importFrom data.table setkeyv key
+#' @importFrom stats cov na.pass
 #' @export
 stsTable <- function(stsData, type="Abundance", raw=FALSE){
         # If NULL, data is yet generated
@@ -200,7 +201,24 @@ stsTable <- function(stsData, type="Abundance", raw=FALSE){
 	# Set keys as year and age
 	keycols<-c("year",config$groupType)
 	setkeyv(result, keycols)
-	
+
+	# Generate variance
+	if(type == "Abundance"){
+		tempvar <- xtabs(Ab.Sum/eval(parse(text=numberscale)) ~ .id + year + eval(parse(text=config$groupType)), result, na.action = na.pass, exclude = NULL)
+	}else if(type == "Weight"){
+		tempvar <- xtabs(Weight.Sum/Ab.Sum ~ .id + year + eval(parse(text=config$groupType)), result, na.action = na.pass, exclude = NULL)
+	}else{
+		print("Invalid type")
+		return(NULL)
+	}
+	iterator <- list()
+	for(it in 1:length(dimnames(tempvar)[[3]])){
+		if(!is.na(dimnames(tempvar)[[3]][[it]]))
+			iterator[[it]] <- diag(cov(tempvar[,,it]))
+	}
+	var_raw <- t(as.matrix(do.call(rbind, iterator)))
+        var_raw[var_raw==0 | is.na(var_raw)] <- -1
+
 	# Create mean values for every year age combination
 	result <- result[, lapply(.SD, mean, na.rm=TRUE), by = key(result), .SDcols = !".id"]
 	
@@ -227,12 +245,16 @@ stsTable <- function(stsData, type="Abundance", raw=FALSE){
 	names(attr(outTable,"row.vars"))<-"Year"
 
 	# If Length Group, rename the length column names to include interval
-	source <- attr(outTable,"col.vars")[[legendTitle]]
+	colInt <- attr(outTable,"col.vars")[[legendTitle]]
 
 	# Special case for Length group, override the col.vars
 	if(config$groupType == "LenGrp"){
-	   attr(outTable,"col.vars")[[legendTitle]] <- as.vector(tmpLabel[source])
+	   attr(outTable,"col.vars")[[legendTitle]] <- as.vector(tmpLabel[colInt])
 	}
+
+	# Add computed variance
+	attr(outTable, "variance") <- var_raw
+
 	if(raw)
 		return(outTable)
 	else

@@ -1,4 +1,5 @@
 #' @importFrom httr POST content
+#' @importFrom jsonlite fromJSON
 getAssessmentData <- function(src, date, ageVec, yearVec, type, format, useHeader, target)
 {
 	
@@ -8,7 +9,7 @@ getAssessmentData <- function(src, date, ageVec, yearVec, type, format, useHeade
 		url <- paste0(target$url, "/R/getAssessmentData.core/json")
 		query <- list(src=src, date=date, ageVec=ageVec, yearVec=yearVec, type=type, format=format, useHeader=useHeader)
 		out <- httr::POST(url, body = query, encode = "json")
-		out <- unlist(httr::content(out, "parsed"))
+		out <- jsonlite::fromJSON(httr::content(out, "text"))
 	}
 
 	return(out)
@@ -18,6 +19,8 @@ getAssessmentData <- function(src, date, ageVec, yearVec, type, format, useHeade
 #'
 #' \code{updateICESSurveyFile} returns TRUE if succeeded or FALSE if failed.
 #' @param surveyFile The path to the survey file.
+#' @param type Data type from source to put into the file. Either "data" or "data_var" (covariance).
+#' @param text If not NULL then text data in this variable will be put into the survey file.
 #' @param srcHead Survey title to be (partially) matched.
 #' @param stsName Survey time series name that will served as the source.
 #' @param stsDate The timestamp of the survey time series source.
@@ -26,8 +29,10 @@ getAssessmentData <- function(src, date, ageVec, yearVec, type, format, useHeade
 #' @param target The timestamp of the iter.
 #'
 #' @export
-updateICESSurveyFile <- function(surveyFile, srcHead, stsName, stsDate = NULL, useSourceAge = FALSE, useSourceYear = FALSE, target)
+updateICESSurveyFile <- function(surveyFile, type, text, srcHead, stsName, stsDate = NULL, useSourceAge = FALSE, useSourceYear = FALSE, target)
 {
+
+	# Assuming the file exists
 	if(!file.exists(surveyFile))
 		return(FALSE)
 
@@ -66,25 +71,32 @@ updateICESSurveyFile <- function(surveyFile, srcHead, stsName, stsDate = NULL, u
 
 		if(useSourceYear)
 			yearVec <- c(startYear, endYear)
-		
-		newLines <- getAssessmentData(stsName, stsDate, ageVec, yearVec, type="STS", format="SAM", useHeader = FALSE, target)
+
+		if(is.null(text))		
+			newLines <- getAssessmentData(stsName, stsDate, ageVec, yearVec, type="STS", format="SAM", useHeader = FALSE, target)
+		else
+			newLines <- text
 
 		# Combine data
-		newSurveyLines <- c(surveyLines[1:start], newLines, surveyLines[(end + 1):length(surveyLines)])
+		newSurveyLines <- c(surveyLines[1:start], newLines[[type]], surveyLines[(end + 1):length(surveyLines)])
 	} else {
 		# Update number of cruises
 		surveyLines[2] <- as.numeric(trimws(surveyLines[2])) + 1
 		
 		# Get data
-		newLines <- getAssessmentData(stsName, stsDate, ageVec, yearVec, type="STS", format="SAM", useHeader = FALSE, target)
+		if(is.null(text))
+			newLines <- getAssessmentData(stsName, stsDate, ageVec, yearVec, type="STS", format="SAM", useHeader = FALSE, target)
+		else
+			newLines <- text
 
 		# Combine data
-		newSurveyLines <- c(surveyLines[1:length(surveyLines)], srcHead, newLines)	
+		newSurveyLines <- c(surveyLines[1:length(surveyLines)], srcHead, newLines[[type]])
 	}
 
-	#print(newSurveyLines)
 	# Save new file
-	file.copy(surveyFile, paste0(surveyFile, ".original"))
+	if(file.exists(surveyFile) && !file.exists(paste0(surveyFile, ".original")))
+		file.copy(surveyFile, paste0(surveyFile, ".original"))
+	
 	write(newSurveyLines, file=surveyFile)
 
 	return(TRUE)
@@ -93,6 +105,8 @@ updateICESSurveyFile <- function(surveyFile, srcHead, stsName, stsDate = NULL, u
 # Do pre-process on survey data
 preprocess.survey <- function(query, target, file, config) {
 
+	file_var <- paste0(tools::file_path_sans_ext(file), "_var.dat")
+
 	mode <- config[[paste0(query, ".mode")]]
 	header <- config[[paste0(query, ".header")]]
 	sts <- config[[paste0(query, ".stssource")]]
@@ -100,18 +114,27 @@ preprocess.survey <- function(query, target, file, config) {
 	sourceAge <- config[[paste0(query, ".useSourceAge")]]
 	sourceYear <- config[[paste0(query, ".useSourceYear")]]
 
+	# Texts
+	text <- NULL
+
 	# Check if we want to rebuid time series using stox
 	if(mode == "build") {
 		processRstoxSTS(config[[paste0(query, ".surveyBuildConf")]])
 		# Set mode to local
 		mode <- "local"
+	} else if (mode == "manual") {
+		text <- list()
+		text[["data"]] <- config[[paste0(query, ".data")]]
+		text[["data_var"]] <- config[[paste0(query, ".data_var")]]
+		mode <- "text"
 	}
 
-	# Set target (remote or local)
+	# Set target (remote or local or text)
 	target[["mode"]] <- mode
 
 	# Do process
-	ret <- updateICESSurveyFile(file, header, sts, stsDate, useSourceAge = sourceAge, useSourceYear = sourceYear, target)
+	ret <- updateICESSurveyFile(file, "data", text, header, sts, stsDate, useSourceAge = sourceAge, useSourceYear = sourceYear, target)
+	ret <- updateICESSurveyFile(file_var, "data_var", text, header, sts, stsDate, useSourceAge = sourceAge, useSourceYear = sourceYear, target)
 
 	return(ret)
 }

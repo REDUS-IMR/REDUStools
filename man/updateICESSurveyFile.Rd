@@ -4,18 +4,16 @@
 \alias{updateICESSurveyFile}
 \title{Update or add a survey index abundance in an ICES format file.}
 \usage{
-updateICESSurveyFile(
-  surveyFile,
-  srcHead,
-  stsName,
-  stsDate = NULL,
-  useSourceAge = FALSE,
-  useSourceYear = FALSE,
-  target
-)
+updateICESSurveyFile(surveyFile, type, text, srcHead, stsName,
+  stsDate = NULL, useSourceAge = FALSE, useSourceYear = FALSE,
+  target)
 }
 \arguments{
 \item{surveyFile}{The path to the survey file.}
+
+\item{type}{Data type from source to put into the file. Either "data" or "data_var" (covariance).}
+
+\item{text}{If not NULL then text data in this variable will be put into the survey file.}
 
 \item{srcHead}{Survey title to be (partially) matched.}
 
