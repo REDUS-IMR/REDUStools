@@ -1,5 +1,5 @@
 # Keep CRAN check happy
-globalVariables(c("year", ".SD", ".x", "LenGrp", "..keep", ":=", ".id"))
+globalVariables(c("age", "year", ".SD", ".x", "LenGrp", "..keep", ":=", ".id"))
 
 # Get configuration
 getConfig <- function() {

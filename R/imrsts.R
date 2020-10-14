@@ -204,20 +204,20 @@ stsTable <- function(stsData, type="Abundance", raw=FALSE){
 
 	# Generate variance
 	if(type == "Abundance"){
-		tempvar <- xtabs(Ab.Sum/eval(parse(text=numberscale)) ~ .id + year + eval(parse(text=config$groupType)), result, na.action = na.pass, exclude = NULL)
+		tempvar <- xtabs(Ab.Sum/eval(parse(text=numberscale)) ~ eval(parse(text=config$groupType)) + .id + year, result, na.action = na.pass, exclude = NULL)
 	}else if(type == "Weight"){
-		tempvar <- xtabs(Weight.Sum/Ab.Sum ~ .id + year + eval(parse(text=config$groupType)), result, na.action = na.pass, exclude = NULL)
+		tempvar <- xtabs(Weight.Sum/Ab.Sum ~ eval(parse(text=config$groupType)) + .id + year, result, na.action = na.pass, exclude = NULL)
 	}else{
 		print("Invalid type")
 		return(NULL)
 	}
-	iterator <- list()
-	for(it in 1:length(dimnames(tempvar)[[3]])){
-		if(!is.na(dimnames(tempvar)[[3]][[it]]))
-			iterator[[it]] <- diag(cov(tempvar[,,it]))
+	itervar <- list()
+	year_name <- dimnames(tempvar)[[3]]
+	for(it in seq_len(length(year_name))){
+		itervar[[it]] <- cov(t(tempvar[,,it]))
+		itervar[[it]][itervar[[it]]==0 | is.na(itervar[[it]])] <- -1
 	}
-	var_raw <- t(as.matrix(do.call(rbind, iterator)))
-        var_raw[var_raw==0 | is.na(var_raw)] <- -1
+	names(itervar) <- year_name
 
 	# Create mean values for every year age combination
 	result <- result[, lapply(.SD, mean, na.rm=TRUE), by = key(result), .SDcols = !".id"]
@@ -253,7 +253,7 @@ stsTable <- function(stsData, type="Abundance", raw=FALSE){
 	}
 
 	# Add computed variance
-	attr(outTable, "variance") <- var_raw
+	attr(outTable, "variance") <- itervar
 
 	if(raw)
 		return(outTable)

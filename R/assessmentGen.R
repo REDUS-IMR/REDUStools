@@ -18,6 +18,7 @@ getAssessmentData.core <- function(src, date, ageVec, yearVec, type, format, use
 	return(list(data=result[[1]], data_var=result[[2]]))
 }
 
+#' @importFrom data.table copy
 formatSAM <- function(data, ageVec, yearVec, useHeader = TRUE){
 
         mySTS <- data$meta$stsName
@@ -53,9 +54,22 @@ formatSAM <- function(data, ageVec, yearVec, useHeader = TRUE){
 	tempTBL[, year:=(attr(tempfTBL, "row.vars")[[1]])]
 
 	# and variance
-	tempTBLVAR <- data.table(attr(tempfTBL, "variance"))
-	colnames(tempTBLVAR) <- attr(tempfTBL, "col.vars")[[1]]
-	tempTBLVAR[, year:=(attr(tempfTBL, "row.vars")[[1]])]
+	tempTBLVAR <- lapply(attr(tempfTBL, "variance"), data.table)
+	## Filter out last column and row if they represent NAs
+	tempTBLVAR <- lapply(tempTBLVAR, function(xy) { if(substr(tail(colnames(xy), 1), 1, 1) == "V") {
+								xy <- xy[1:(nrow(xy) - 1), 1:(ncol(xy) - 1)]
+								}
+							else {xy}
+							})
+	## Copy age to row
+	tempTBLVAR <- lapply(tempTBLVAR, function(xy) {nn <- copy(colnames(xy)); xy[, age:= nn]})
+	## Filter age
+	tempTBLVAR <- lapply(tempTBLVAR, function(xy) {
+					xy[age %in% intersect(xy$age, as.character(c(minAge:maxAge))),];
+					xy[, setdiff(colnames(xy), as.character(c(minAge:maxAge))) := NULL]
+			})
+	## Filter year
+	tempTBLVAR <- tempTBLVAR[intersect(names(tempTBLVAR), as.character(c(startYear:endYear)))]
 
 	# Parse config
 	#FileOutputName <- paste(mySTS, type,"SAM.dat", sep=".")
@@ -64,7 +78,6 @@ formatSAM <- function(data, ageVec, yearVec, useHeader = TRUE){
 	rowUnset <- setdiff(tempTBL$year, as.character(c(startYear:endYear)))
 	if(length(rowUnset) > 0 ) {
 		tempTBL <- tempTBL[year != rowUnset]
-		tempTBLVAR <- tempTBLVAR[year != rowUnset]
 	}
 	tempTBL[, setdiff(colnames(tempTBL), as.character(c(minAge:maxAge))) := NULL]
 
@@ -80,16 +93,15 @@ formatSAM <- function(data, ageVec, yearVec, useHeader = TRUE){
 
 	# ..and filter out unwanted age columns using keep
 	tempTBL <- tempTBL[, ..keep]
-	tempTBLVAR <- tempTBLVAR[, ..keep]
 
 	# Round the abundance-per-year values to 3 decimal places
 	tempTBL <- tempTBL[, round(.SD, digits = 3)]
-	tempTBLVAR <- tempTBLVAR[, round(.SD, digits = 3)]
+	tempTBLVAR <- lapply(tempTBLVAR, function(xy) xy[, round(.SD, digits = 3)])
 
 	# Add effort value in the first column
 	effortNumber <- 1
 	tempTBL <- cbind(a = effortNumber, tempTBL)
-	tempTBLVAR <- cbind(a = effortNumber, tempTBLVAR)
+	tempTBLVAR <- lapply(tempTBLVAR, function(xy) cbind(a = effortNumber, xy))
 	
 	### Prepare header
 
@@ -127,18 +139,25 @@ formatSAM <- function(data, ageVec, yearVec, useHeader = TRUE){
 		suppressWarnings(write(strtrim(mySTS, 80), file= FileOutputVar, append=FALSE))
 
 		# Write number of fleet (Now we only have one fleet)
-		NoFleet <- 100 + 1
-		suppressWarnings(write(NoFleet, file= FileOutput, append=TRUE))
-		suppressWarnings(write(NoFleet, file= FileOutputVar, append=TRUE))
+		NoFleet <- 100
+		suppressWarnings(write(NoFleet + 1, file= FileOutput, append=TRUE))
+		suppressWarnings(write(NoFleet + length(tempTBLVAR), file= FileOutputVar, append=TRUE))
 	}
 
 	# Write header per fleet
 	suppressWarnings(write(textHead, file= FileOutput, append=TRUE))
-	suppressWarnings(write(textHead, file= FileOutputVar, append=TRUE))
 
 	# Table per-fleet
 	suppressWarnings(write.table(tempTBL, file=FileOutput, append=TRUE, sep="\t", dec=".", col.names = FALSE, row.names=FALSE))
-	suppressWarnings(write.table(tempTBLVAR, file=FileOutputVar, append=TRUE, sep="\t", dec=".", col.names = FALSE, row.names=FALSE))
+
+	suppressWarnings(
+		lapply(names(tempTBLVAR),
+			function (yr) {
+				write(paste(paste0("VAR", yr), EffortLine, FirstLastAge, sep = "\n"), file= FileOutputVar, append=TRUE);
+				write.table(tempTBLVAR[[yr]], file=FileOutputVar, append=TRUE, sep="\t", dec=".", col.names = FALSE, row.names=FALSE)
+			}
+		)
+	)
 
 	ret <- list()
 	ret[["data"]] <- readLines(FileOutput)
