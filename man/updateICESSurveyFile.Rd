@@ -4,14 +4,19 @@
 \alias{updateICESSurveyFile}
 \title{Update or add a survey index abundance in an ICES format file.}
 \usage{
-updateICESSurveyFile(surveyFile, type, text, srcHead, stsName,
-  stsDate = NULL, useSourceAge = FALSE, useSourceYear = FALSE,
-  target)
+updateICESSurveyFile(
+  surveyFile,
+  text,
+  srcHead,
+  stsName,
+  stsDate = NULL,
+  useSourceAge = FALSE,
+  useSourceYear = FALSE,
+  target
+)
 }
 \arguments{
 \item{surveyFile}{The path to the survey file.}
-
-\item{type}{Data type from source to put into the file. Either "data" or "data_var" (covariance).}
 
 \item{text}{If not NULL then text data in this variable will be put into the survey file.}
 
@@ -21,11 +26,11 @@ updateICESSurveyFile(surveyFile, type, text, srcHead, stsName,
 
 \item{stsDate}{The timestamp of the survey time series source.}
 
-\item{useSourceAge}{The timestamp of the iter.}
+\item{useSourceAge}{Use similar age structure to the existing/source survey file.}
 
-\item{useSourceYear}{The timestamp of the iter.}
+\item{useSourceYear}{Use similar year structure to the existing/source survey file.}
 
-\item{target}{The timestamp of the iter.}
+\item{target}{Target mode (local or remote).}
 }
 \description{
 \code{updateICESSurveyFile} returns TRUE if succeeded or FALSE if failed.
