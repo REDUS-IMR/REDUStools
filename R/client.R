@@ -19,17 +19,16 @@ getAssessmentData <- function(src, date, ageVec, yearVec, type, format, useHeade
 #'
 #' \code{updateICESSurveyFile} returns TRUE if succeeded or FALSE if failed.
 #' @param surveyFile The path to the survey file.
-#' @param type Data type from source to put into the file. Either "data" or "data_var" (covariance).
 #' @param text If not NULL then text data in this variable will be put into the survey file.
 #' @param srcHead Survey title to be (partially) matched.
 #' @param stsName Survey time series name that will served as the source.
 #' @param stsDate The timestamp of the survey time series source.
-#' @param useSourceAge The timestamp of the iter.
-#' @param useSourceYear The timestamp of the iter.
-#' @param target The timestamp of the iter.
+#' @param useSourceAge Use similar age structure to the existing/source survey file.
+#' @param useSourceYear Use similar year structure to the existing/source survey file.
+#' @param target Target mode (local or remote).
 #'
 #' @export
-updateICESSurveyFile <- function(surveyFile, type, text, srcHead, stsName, stsDate = NULL, useSourceAge = FALSE, useSourceYear = FALSE, target)
+updateICESSurveyFile <- function(surveyFile, text, srcHead, stsName, stsDate = NULL, useSourceAge = FALSE, useSourceYear = FALSE, target)
 {
 
 	# Assuming the file exists
@@ -78,11 +77,11 @@ updateICESSurveyFile <- function(surveyFile, type, text, srcHead, stsName, stsDa
 			newLines <- text
 
 		# Combine data
-		newSurveyLines <- c(surveyLines[1:start], newLines[[type]], surveyLines[(end + 1):length(surveyLines)])
+		newSurveyLines <- c(surveyLines[1:start], newLines[["data"]], surveyLines[(end + 1):length(surveyLines)])
 	} else {
 		# Update number of cruises
 		surveyLines[2] <- as.numeric(trimws(surveyLines[2])) + 1
-		
+
 		# Get data
 		if(is.null(text))
 			newLines <- getAssessmentData(stsName, stsDate, ageVec, yearVec, type="STS", format="SAM", useHeader = FALSE, target)
@@ -90,22 +89,27 @@ updateICESSurveyFile <- function(surveyFile, type, text, srcHead, stsName, stsDa
 			newLines <- text
 
 		# Combine data
-		newSurveyLines <- c(surveyLines[1:length(surveyLines)], srcHead, newLines[[type]])
+		newSurveyLines <- c(surveyLines[1:length(surveyLines)], srcHead, newLines[["data"]])
 	}
 
 	# Save new file
 	if(file.exists(surveyFile) && !file.exists(paste0(surveyFile, ".original")))
 		file.copy(surveyFile, paste0(surveyFile, ".original"))
-	
-	write(newSurveyLines, file=surveyFile)
+
+	# Now process variance for this survey
+	surveyID <- head(unlist(strsplit(srcHead, "\\W+", perl = T)), 1)
+	surveyFileVar <- paste0(tools::file_path_sans_ext(surveyFile), "_var_", surveyID, ".dat")
+
+	if(file.exists(surveyFileVar) && !file.exists(paste0(surveyFileVar, ".original")))
+		file.copy(surveyFileVar, paste0(surveyFileVar, ".original"))
+
+	write(newLines[["data_var"]], file=surveyFileVar)
 
 	return(TRUE)
 }
 
 # Do pre-process on survey data
 preprocess.survey <- function(query, target, file, config) {
-
-	file_var <- paste0(tools::file_path_sans_ext(file), "_var.dat")
 
 	mode <- config[[paste0(query, ".mode")]]
 	header <- config[[paste0(query, ".header")]]
@@ -133,8 +137,7 @@ preprocess.survey <- function(query, target, file, config) {
 	target[["mode"]] <- mode
 
 	# Do process
-	ret <- updateICESSurveyFile(file, "data", text, header, sts, stsDate, useSourceAge = sourceAge, useSourceYear = sourceYear, target)
-	ret <- updateICESSurveyFile(file_var, "data_var", text, header, sts, stsDate, useSourceAge = sourceAge, useSourceYear = sourceYear, target)
+	ret <- updateICESSurveyFile(file, text, header, sts, stsDate, useSourceAge = sourceAge, useSourceYear = sourceYear, target)
 
 	return(ret)
 }

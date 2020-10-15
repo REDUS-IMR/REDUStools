@@ -57,7 +57,8 @@ formatSAM <- function(data, ageVec, yearVec, useHeader = TRUE){
 	tempTBLVAR <- lapply(attr(tempfTBL, "variance"), data.table)
 	## Filter out last column and row if they represent NAs
 	tempTBLVAR <- lapply(tempTBLVAR, function(xy) { if(substr(tail(colnames(xy), 1), 1, 1) == "V") {
-								xy <- xy[1:(nrow(xy) - 1), 1:(ncol(xy) - 1)]
+								xy <- xy[1:(nrow(xy) - 1), 1:(ncol(xy) - 1)];
+								xy
 								}
 							else {xy}
 							})
@@ -65,8 +66,9 @@ formatSAM <- function(data, ageVec, yearVec, useHeader = TRUE){
 	tempTBLVAR <- lapply(tempTBLVAR, function(xy) {nn <- copy(colnames(xy)); xy[, age:= nn]})
 	## Filter age
 	tempTBLVAR <- lapply(tempTBLVAR, function(xy) {
-					xy[age %in% intersect(xy$age, as.character(c(minAge:maxAge))),];
-					xy[, setdiff(colnames(xy), as.character(c(minAge:maxAge))) := NULL]
+					xy <- xy[age %in% intersect(age, as.character(c(minAge:plusAge))),];
+					xy <- xy[, setdiff(colnames(xy), as.character(c(minAge:plusAge))) := NULL];
+					xy
 			})
 	## Filter year
 	tempTBLVAR <- tempTBLVAR[intersect(names(tempTBLVAR), as.character(c(startYear:endYear)))]
@@ -77,7 +79,7 @@ formatSAM <- function(data, ageVec, yearVec, useHeader = TRUE){
 	# Filter out table
 	rowUnset <- setdiff(tempTBL$year, as.character(c(startYear:endYear)))
 	if(length(rowUnset) > 0 ) {
-		tempTBL <- tempTBL[year != rowUnset]
+		tempTBL <- tempTBL[!(year %in% rowUnset),]
 	}
 	tempTBL[, setdiff(colnames(tempTBL), as.character(c(minAge:maxAge))) := NULL]
 
@@ -127,7 +129,7 @@ formatSAM <- function(data, ageVec, yearVec, useHeader = TRUE){
 	### Write everything
 
 	# Placeholder
-        FileOutput <- tempfile()
+	FileOutput <- tempfile()
 	FileOutputVar <- tempfile()
 
 	if(useHeader) {
@@ -136,12 +138,10 @@ formatSAM <- function(data, ageVec, yearVec, useHeader = TRUE){
 
 		# Write title
 		suppressWarnings(write(strtrim(mySTS, 80), file= FileOutput, append=FALSE))
-		suppressWarnings(write(strtrim(mySTS, 80), file= FileOutputVar, append=FALSE))
 
 		# Write number of fleet (Now we only have one fleet)
 		NoFleet <- 100
 		suppressWarnings(write(NoFleet + 1, file= FileOutput, append=TRUE))
-		suppressWarnings(write(NoFleet + length(tempTBLVAR), file= FileOutputVar, append=TRUE))
 	}
 
 	# Write header per fleet
@@ -150,10 +150,13 @@ formatSAM <- function(data, ageVec, yearVec, useHeader = TRUE){
 	# Table per-fleet
 	suppressWarnings(write.table(tempTBL, file=FileOutput, append=TRUE, sep="\t", dec=".", col.names = FALSE, row.names=FALSE))
 
+	# Variance always have the header text
+	suppressWarnings(write(strtrim(mySTS, 80), file= FileOutputVar, append=FALSE))
+	suppressWarnings(write(100 + length(tempTBLVAR), file= FileOutputVar, append=TRUE))
 	suppressWarnings(
 		lapply(names(tempTBLVAR),
 			function (yr) {
-				write(paste(paste0("VAR", yr), EffortLine, FirstLastAge, sep = "\n"), file= FileOutputVar, append=TRUE);
+				write(paste(paste0("\nVAR", yr), FirstLastAge, EffortLine, FirstLastAge, sep = "\n"), file= FileOutputVar, append=TRUE);
 				write.table(tempTBLVAR[[yr]], file=FileOutputVar, append=TRUE, sep="\t", dec=".", col.names = FALSE, row.names=FALSE)
 			}
 		)
