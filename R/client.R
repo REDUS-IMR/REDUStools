@@ -95,6 +95,7 @@ updateICESSurveyFile <- function(surveyFile, text, srcHead, stsName, stsDate = N
 	# Save new file
 	if(file.exists(surveyFile) && !file.exists(paste0(surveyFile, ".original")))
 		file.copy(surveyFile, paste0(surveyFile, ".original"))
+	write(newSurveyLines, file=surveyFile)
 
 	# Now process variance for this survey
 	surveyID <- head(unlist(strsplit(srcHead, "\\W+", perl = T)), 1)
