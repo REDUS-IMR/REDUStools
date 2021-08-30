@@ -165,19 +165,19 @@ processRstoxSTS <- function(masterScript) {
     strata <- unique(base$Stratum[base$includeintotal %in% TRUE])
 
     # Sum the abundance or the product of abundance and weight (and possibly others in the future):
-    varInd <- abbrMatch(var[1], c("Abundance", "weight"), ignore.case = TRUE)
+    varInd <- abbrMatch(var[1], c("Abundance", "IndividualWeightGram"), ignore.case=TRUE)
 
     # Declare the variables used in the DT[] expression below:
     . <- NULL
     Ab.Sum <- NULL
     Abundance <- NULL
     Stratum <- NULL
-    weight <- NULL
+    IndividualWeightGram <- NULL
     if (varInd$ind == 1) {
       tmp <- DT[Stratum %in% strata, .(Ab.Sum = sum(Abundance, na.rm = TRUE)), by = byGrp]
     }
     else if (varInd$ind == 2) {
-      tmp <- DT[Stratum %in% strata, .(Weight.Sum = sum(Abundance * weight, na.rm = TRUE)), by = byGrp]
+      tmp <- DT[Stratum %in% strata, .(Weight.Sum = sum(Abundance * IndividualWeightGram, na.rm = TRUE)), by = byGrp]
     }
     else {
       warning(paste0("'var' does not match the available values (", getPlottingUnit()$defaults$Rstox_var, ")"))
@@ -581,7 +581,7 @@ processRstoxSTS <- function(masterScript) {
       tempAbundanceAge <- processReport(DT, baseData, var = "Abundance", grp1 = configSTS$groupType)
 
       # Process report (Weight per group)
-      tempWeightAge <- processReport(DT, baseData, var = "weight", grp1 = configSTS$groupType)
+      tempWeightAge <- processReport(DT, baseData, var = "IndividualWeightGram", grp1 = configSTS$groupType)
 
       # Add year information to the processed data
       tempAge <- tryCatch({
@@ -602,7 +602,7 @@ processRstoxSTS <- function(masterScript) {
       tempALK <- processReport(DT, baseData, var = "Abundance", grp1 = "LenGrp", grp2 = "age")
 
       # Process report (WLK)
-      tempWLK <- processReport(DT, baseData, var = "weight", grp1 = "LenGrp", grp2 = "age")
+      tempWLK <- processReport(DT, baseData, var = "IndividualWeightGram", grp1 = "LenGrp", grp2 = "age")
 
       # Add year information to the processed data
       tempLK <- cbind("year" = processYear, merge(tempALK, tempWLK))
