@@ -19,11 +19,11 @@ processRstoxSTS <- function(masterScript) {
   forceBioticV3 <- function(projectName) {
     # Read project path
     projectPaths <- getProjectPaths(projectName)
-
-    bioticDataPath <- paste0(projectPaths$projectRoot, "/input/biotic")
-
-    exe <- paste0("grep -rl 'http://www.imr.no/formats/nmdbiotic/v3.1' ", bioticDataPath, " | xargs sed -i '' 's/\"http:\\/\\/www.imr.no\\/formats\\/nmdbiotic\\/v3.1\"/\"http:\\/\\/www.imr.no\\/formats\\/nmdbiotic\\/v3\"/g'")
-    system(exe)
+    # Getting the XML files
+    bioticDataPath <- paste0(projectPaths$projectPath, "/input/biotic")
+    files <- list.files(bioticDataPath, full.names =  TRUE, recursive = TRUE)
+    # Replace the namespaces
+    lapply(files, function(x) system(paste0("sed -i 's/\"http:\\/\\/www.imr.no\\/formats\\/nmdbiotic\\/v3.1\"/\"http:\\/\\/www.imr.no\\/formats\\/nmdbiotic\\/v3\"/g' '", x, "'")))
   }
 
   # Apply overrides to xml nodes
@@ -441,7 +441,7 @@ processRstoxSTS <- function(masterScript) {
       }
 
       # If we must rename the XML Biotic v3.1 to v3
-      if (toupper(configSTS$forceBioticV3) == "TRUE") {
+      if (!is.null(configSTS$forceBioticV3) && toupper(configSTS$forceBioticV3) == "TRUE") {
         forceBioticV3(projectName)
       }
 
