@@ -1,8 +1,8 @@
 Package: REDUStools
 Type: Package
 Title: REDUS helper toolkits
-Version: 0.5
-Date: 2020-10-15
+Version: 0.6
+Date: 2021-09-08
 Author: Ibrahim Umar
 Maintainer: Ibrahim Umar <ibrahim.umar@hi.no>
 Description: Various REDUS related tools. 1) IMR Survey Time Series (STS) Explorer Application for OpenCPU. Provides visualization and data exports.

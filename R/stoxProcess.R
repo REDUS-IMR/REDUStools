@@ -15,6 +15,17 @@
 #' @importFrom parallel detectCores
 processRstoxSTS <- function(masterScript) {
 
+  # Force Biotic data into v3
+  forceBioticV3 <- function(projectName) {
+    # Read project path
+    projectPaths <- getProjectPaths(projectName)
+    # Getting the XML files
+    bioticDataPath <- paste0(projectPaths$projectPath, "/input/biotic")
+    files <- list.files(bioticDataPath, full.names =  TRUE, recursive = TRUE)
+    # Replace the namespaces
+    lapply(files, function(x) system(paste0("sed -i 's/\"http:\\/\\/www.imr.no\\/formats\\/nmdbiotic\\/v3.1\"/\"http:\\/\\/www.imr.no\\/formats\\/nmdbiotic\\/v3\"/g' '", x, "'")))
+  }
+
   # Apply overrides to xml nodes
   applyXMLOverrides <- function(projectName, mySTS, masterFileName, rver = "1.2", forceFileFix = FALSE) {
     # Construct the used namespace
@@ -427,6 +438,11 @@ processRstoxSTS <- function(masterScript) {
       } else {
         # If apply overrides is set to FALSE, mark it as done without error in the status
         statusRecord[[textYear]]$applyXMLOverrides <- list(TRUE, NA)
+      }
+
+      # If we must rename the XML Biotic v3.1 to v3
+      if (!is.null(configSTS$forceBioticV3) && toupper(configSTS$forceBioticV3) == "TRUE") {
+        forceBioticV3(projectName)
       }
 
       # Read the project data
