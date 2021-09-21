@@ -23,7 +23,7 @@ processRstoxSTS <- function(masterScript) {
     bioticDataPath <- paste0(projectPaths$projectPath, "/input/biotic")
     files <- list.files(bioticDataPath, full.names =  TRUE, recursive = TRUE)
     # Replace the namespaces
-    lapply(files, function(x) system(paste0("sed -i 's/\"http:\\/\\/www.imr.no\\/formats\\/nmdbiotic\\/v3.1\"/\"http:\\/\\/www.imr.no\\/formats\\/nmdbiotic\\/v3\"/g' '", x, "'")))
+    lapply(files, function(x) system(paste0("sed -i'.bak' 's/\"http:\\/\\/www.imr.no\\/formats\\/nmdbiotic\\/v3.1\"/\"http:\\/\\/www.imr.no\\/formats\\/nmdbiotic\\/v3\"/g' '", x, "'")))
   }
 
   # Apply overrides to xml nodes
